@@ -1,0 +1,1 @@
+"""Core document model and PDF mutation primitives."""
