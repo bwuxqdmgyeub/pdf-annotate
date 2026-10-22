@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pdf-annotate"
+version = "0.6.2"
+description = "Plugin-driven PDF Editor for Windows desktop"
+requires-python = ">=3.11"
+authors = [{ name = "pdf-annotate contributors" }]
+dependencies = [
+    "PySide6>=6.7.0",
+    "pymupdf>=1.24.0",
+    "pikepdf>=8.15.0",
+    "Pillow>=10.3.0",
+    "pluggy>=1.5.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.4", "mypy>=1.9"]
+
+[project.scripts]
+pdf-annotate = "pdf_annotate.__main__:main"
+
+[project.entry-points."pdf_annotate.plugins"]
+highlight = "pdf_annotate.extensions.highlight:PLUGIN"
+redact = "pdf_annotate.extensions.redact:PLUGIN"
+forms = "pdf_annotate.extensions.forms:PLUGIN"
+ocr = "pdf_annotate.extensions.ocr:PLUGIN"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
