@@ -1,0 +1,1 @@
+"""Bundled extension modules for the PDF Editor plugin host."""
