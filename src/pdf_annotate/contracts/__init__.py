@@ -1,0 +1,1 @@
+"""Shared contracts between the host and every extension module."""
