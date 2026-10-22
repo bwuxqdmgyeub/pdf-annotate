@@ -1,0 +1,1 @@
+"""Core host: owns the document model, plugin registry and event bus."""
