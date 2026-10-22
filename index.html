@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>pdf-annotate — Annotate & Edit PDFs in Your Browser</title>
+<style>
+  :root{
+    --bg-0:#070a14;
+    --bg-1:#0b1020;
+    --bg-2:#111a33;
+    --indigo:#6366f1;
+    --violet:#8b5cf6;
+    --cyan:#22d3ee;
+    --text:#e8ecf7;
+    --muted:#9aa6c2;
+    --card:rgba(255,255,255,0.04);
+    --card-border:rgba(255,255,255,0.08);
+    --accent:#6366f1;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+
+  html{scroll-behavior:smooth}
+
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Helvetica,Arial,sans-serif;
+    color:var(--text);
+    background:
+      radial-gradient(1100px 600px at 15% -10%, rgba(99,102,241,0.28), transparent 60%),
+      radial-gradient(900px 600px at 90% 0%, rgba(34,211,238,0.12), transparent 55%),
+      radial-gradient(1000px 800px at 50% 120%, rgba(139,92,246,0.18), transparent 60%),
+      linear-gradient(160deg, var(--bg-0) 0%, var(--bg-1) 45%, var(--bg-2) 100%);
+    background-attachment:fixed;
+    min-height:100vh;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  a{color:inherit;text-decoration:none}
+
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+
+  /* ---------- NAV ---------- */
+  header.nav-shell{
+    position:sticky;top:0;z-index:100;
+    backdrop-filter:blur(18px) saturate(160%);
+    -webkit-backdrop-filter:blur(18px) saturate(160%);
+    background:rgba(10,14,28,0.55);
+    border-bottom:1px solid rgba(255,255,255,0.07);
+  }
+
+  .nav{
+    display:flex;align-items:center;justify-content:space-between;
+    height:68px;gap:24px;
+  }
+
+  .brand{
+    display:flex;align-items:center;gap:10px;
+    font-weight:800;font-size:1.05rem;letter-spacing:-0.01em;
+  }
+
+  .brand-mark{
+    width:30px;height:30px;border-radius:9px;
+    display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--indigo),var(--violet));
+    box-shadow:0 6px 18px rgba(99,102,241,0.45);
+    font-size:0.95rem;
+  }
+
+  .brand span.accent{
+    background:linear-gradient(90deg,var(--cyan),var(--violet));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+
+  .nav-links{
+    display:flex;align-items:center;gap:30px;
+    font-size:0.92rem;color:var(--muted);
+  }
+
+  .nav-links a{transition:color .2s ease}
+  .nav-links a:hover{color:#fff}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:9px;
+    font-weight:600;font-size:0.92rem;border-radius:11px;
+    padding:11px 20px;cursor:pointer;border:1px solid transparent;
+    transition:transform .18s ease, box-shadow .25s ease, background .25s ease, border-color .25s ease;
+    white-space:nowrap;
+  }
+
+  .btn-primary{
+    background:linear-gradient(135deg,var(--indigo),var(--violet));
+    color:#fff;
+    box-shadow:0 8px 24px rgba(99,102,241,0.38);
+  }
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(99,102,241,0.55)}
+
+  .btn-ghost{
+    background:rgba(255,255,255,0.04);
+    border-color:rgba(255,255,255,0.16);
+    color:var(--text);
+  }
+  .btn-ghost:hover{background:rgba(255,255,255,0.09);transform:translateY(-2px)}
+
+  .nav .btn{padding:9px 18px}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    text-align:center;
+    padding:88px 0 72px;
+    position:relative;
+  }
+
+  .pill{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:7px 16px;border-radius:999px;
+    font-size:0.78rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;
+    color:#c7d2fe;
+    background:rgba(99,102,241,0.12);
+    border:1px solid rgba(99,102,241,0.35);
+    margin-bottom:26px;
+  }
+
+  .pill .dot{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--cyan);
+    box-shadow:0 0 10px var(--cyan);
+    animation:pulse 2.2s infinite;
+  }
+
+  @keyframes pulse{
+    0%,100%{opacity:1;transform:scale(1)}
+    50%{opacity:.45;transform:scale(.8)}
+  }
+
+  h1{
+    font-size:clamp(2.3rem,6vw,4.1rem);
+    line-height:1.08;
+    letter-spacing:-0.035em;
+    font-weight:800;
+    max-width:900px;
+    margin:0 auto 22px;
+    background:linear-gradient(100deg,#ffffff 0%,#c7d2fe 35%,#a78bfa 65%,#67e8f9 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+
+  .hero p.lead{
+    max-width:640px;margin:0 auto 36px;
+    color:var(--muted);font-size:1.08rem;
+  }
+
+  .hero-cta{
+    display:flex;justify-content:center;gap:14px;flex-wrap:wrap;
+    margin-bottom:52px;
+  }
+  .hero-cta .btn{padding:14px 28px;font-size:1rem;border-radius:13px}
+
+  .stats{
+    display:flex;justify-content:center;flex-wrap:wrap;gap:14px;
+  }
+
+  .stat-chip{
+    display:flex;flex-direction:column;align-items:flex-start;gap:2px;
+    padding:14px 22px;border-radius:14px;
+    background:var(--card);
+    border:1px solid var(--card-border);
+    backdrop-filter:blur(8px);
+    min-width:150px;
+    text-align:left;
+  }
+
+  .stat-chip .stat-value{
+    font-weight:800;font-size:1.02rem;letter-spacing:-0.01em;
+    background:linear-gradient(90deg,#fff,#a5b4fc);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .stat-chip .stat-label{
+    font-size:0.76rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;
+  }
+
+  /* ---------- SECTION HEADINGS ---------- */
+  section{padding:76px 0}
+
+  .section-head{
+    text-align:center;max-width:640px;margin:0 auto 54px;
+  }
+  .section-head h2{
+    font-size:clamp(1.7rem,3.6vw,2.4rem);
+    letter-spacing:-0.025em;font-weight:800;margin-bottom:12px;
+  }
+  .section-head p{color:var(--muted);font-size:1rem}
+
+  /* ---------- FEATURES ---------- */
+  .features-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:22px;
+  }
+
+  .feature-card{
+    position:relative;
+    background:var(--card);
+    border:1px solid var(--card-border);
+    border-radius:18px;
+    padding:30px 26px 28px;
+    overflow:hidden;
+    transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease, background .25s ease;
+  }
+
+  .feature-card::before{
+    content:"";
+    position:absolute;top:0;left:0;right:0;height:3px;
+    background:linear-gradient(90deg,var(--indigo),var(--violet),var(--cyan));
+    opacity:.85;
+  }
+
+  .feature-card:hover{
+    transform:translateY(-6px);
+    background:rgba(255,255,255,0.065);
+    border-color:rgba(99,102,241,0.4);
+    box-shadow:0 22px 44px rgba(0,0,0,0.45), 0 0 0 1px rgba(99,102,241,0.12);
+  }
+
+  .feature-icon{
+    font-size:1.7rem;
+    width:52px;height:52px;border-radius:14px;
+    display:grid;place-items:center;
+    background:rgba(99,102,241,0.13);
+    border:1px solid rgba(99,102,241,0.25);
+    margin-bottom:18px;
+  }
+
+  .feature-card h3{
+    font-size:1.06rem;font-weight:700;margin-bottom:9px;letter-spacing:-0.01em;
+  }
+  .feature-card p{color:var(--muted);font-size:0.92rem}
+
+  /* ---------- HOW IT WORKS ---------- */
+  .steps{
+    position:relative;
+    max-width:680px;margin:0 auto;
+    padding-left:14px;
+  }
+
+  .steps::before{
+    content:"";
+    position:absolute;
+    left:33px;top:20px;bottom:20px;width:3px;
+    border-radius:3px;
+    background:linear-gradient(180deg,var(--indigo),var(--violet),var(--cyan));
+    opacity:.55;
+  }
+
+  .step{
+    position:relative;
+    display:flex;gap:24px;
+    padding:0 0 44px 0;
+  }
+  .step:last-child{padding-bottom:0}
+
+  .step-num{
+    position:relative;z-index:2;
+    flex:0 0 42px;height:42px;border-radius:50%;
+    display:grid;place-items:center;
+    font-weight:800;font-size:0.95rem;color:#fff;
+    background:linear-gradient(135deg,var(--indigo),var(--violet));
+    box-shadow:0 0 0 5px rgba(11,16,32,0.9), 0 8px 22px rgba(99,102,241,0.45);
+  }
+
+  .step-body{
+    background:var(--card);
+    border:1px solid var(--card-border);
+    border-radius:16px;
+    padding:20px 24px;
+    flex:1;
+    transition:border-color .25s ease, background .25s ease;
+  }
+  .step-body:hover{border-color:rgba(99,102,241,0.35);background:rgba(255,255,255,0.06)}
+
+  .step-body h3{font-size:1.04rem;font-weight:700;margin-bottom:6px}
+  .step-body p{color:var(--muted);font-size:0.92rem}
+
+  /* ---------- FAQ ---------- */
+  .faq-list{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+
+  details.faq{
+    background:var(--card);
+    border:1px solid var(--card-border);
+    border-radius:14px;
+    padding:0;
+    overflow:hidden;
+    transition:border-color .25s ease, background .25s ease;
+  }
+  details.faq[open]{border-color:rgba(99,102,241,0.4);background:rgba(99,102,241,0.06)}
+
+  details.faq summary{
+    list-style:none;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:space-between;gap:18px;
+    padding:18px 22px;
+    font-weight:600;font-size:0.98rem;
+    user-select:none;
+  }
+  details.faq summary::-webkit-details-marker{display:none}
+
+  .faq-icon{
+    flex:0 0 26px;height:26px;border-radius:8px;
+    display:grid;place-items:center;
+    background:rgba(99,102,241,0.15);
+    border:1px solid rgba(99,102,241,0.3);
+    color:#c7d2fe;
+    font-size:1.05rem;line-height:1;font-weight:400;
+    transition:transform .28s ease, background .25s ease;
+  }
+  details.faq[open] .faq-icon{
+    transform:rotate(45deg);
+    background:rgba(139,92,246,0.25);
+  }
+
+  .faq-answer{
+    padding:0 22px 20px;
+    color:var(--muted);font-size:0.92rem;
+  }
+
+  /* ---------- CTA BANNER ---------- */
+  .cta-banner{
+    position:relative;
+    border-radius:26px;
+    overflow:hidden;
+    padding:64px 40px;
+    text-align:center;
+    background:
+      radial-gradient(600px 300px at 50% 0%, rgba(99,102,241,0.38), transparent 70%),
+      radial-gradient(500px 280px at 15% 110%, rgba(34,211,238,0.18), transparent 70%),
+      linear-gradient(160deg, rgba(99,102,241,0.16), rgba(17,26,51,0.7));
+    border:1px solid rgba(99,102,241,0.3);
+    box-shadow:0 30px 70px rgba(0,0,0,0.5);
+  }
+
+  .cta-banner::after{
+    content:"";
+    position:absolute;inset:0;
+    background:radial-gradient(420px 200px at 50% 0%, rgba(139,92,246,0.22), transparent 70%);
+    pointer-events:none;
+  }
+
+  .cta-banner h2{
+    position:relative;z-index:1;
+    font-size:clamp(1.7rem,4vw,2.5rem);
+    font-weight:800;letter-spacing:-0.03em;
+    margin-bottom:14px;
+  }
+
+  .cta-banner p{
+    position:relative;z-index:1;
+    color:var(--muted);max-width:540px;margin:0 auto 32px;font-size:1rem;
+  }
+
+  .cta-banner .btn{position:relative;z-index:1}
+
+  /* ---------- FOOTER ---------- */
+  footer{
+    border-top:1px solid rgba(255,255,255,0.07);
+    padding:34px 0;
+    margin-top:40px;
+  }
+
+  .footer-inner{
+    display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;
+    color:var(--muted);font-size:0.87rem;
+  }
+
+  .footer-inner a{
+    color:#c7d2fe;font-weight:600;
+    transition:color .2s ease;
+  }
+  .footer-inner a:hover{color:#fff}
+
+  .footer-brand{
+    display:flex;align-items:center;gap:9px;font-weight:700;color:var(--text);
+  }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width:900px){
+    .features-grid{grid-template-columns:repeat(2,1fr)}
+  }
+
+  @media (max-width:640px){
+    .nav-links{display:none}
+    .nav{height:62px}
+    .hero{padding:60px 0 52px}
+    .hero-cta .btn{width:100%;max-width:320px}
+    .stats{flex-direction:column;align-items:stretch}
+    .stat-chip{min-width:0}
+    .features-grid{grid-template-columns:1fr}
+    section{padding:56px 0}
+    .steps{padding-left:6px}
+    .steps::before{left:25px}
+    .step{gap:16px}
+    .cta-banner{padding:46px 22px;border-radius:20px}
+    .footer-inner{flex-direction:column;text-align:center}
+  }
+</style>
+</head>
+<body>
+
+<header class="nav-shell">
+  <div class="wrap nav">
+    <div class="brand">
+      <div class="brand-mark">✎</div>
+      <div>pdf<span class="accent">-annotate</span></div>
+    </div>
+    <nav class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#how-it-works">How it works</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a class="btn btn-primary" href="https://gitscore.cc" target="_blank" rel="noopener">Download</a>
+  </div>
+</header>
+
+<main>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <div class="pill"><span class="dot"></span> PDF Editor · Open Source</div>
+      <h1>Annotate, fill and merge PDFs right in your browser</h1>
+      <p class="lead">
+        pdf-annotate is a lightweight Windows app that lets you add text, highlights, stamps and freehand ink,
+        fill interactive forms, merge pages and export clean annotated PDFs — no cloud upload, no subscriptions.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="https://gitscore.cc" target="_blank" rel="noopener">⬇ Download for Windows</a>
+        <a class="btn btn-ghost" href="https://gitscore.cc" target="_blank" rel="noopener">View on GitHub</a>
+      </div>
+      <div class="stats">
+        <div class="stat-chip">
+          <span class="stat-value">120K+</span>
+          <span class="stat-label">Downloads</span>
+        </div>
+        <div class="stat-chip">
+          <span class="stat-value">v2.4.1</span>
+          <span class="stat-label">Latest release</span>
+        </div>
+        <div class="stat-chip">
+          <span class="stat-value">Windows 10 / 11</span>
+          <span class="stat-label">Platform</span>
+        </div>
+        <div class="stat-chip">
+          <span class="stat-value">Free &amp; open source</span>
+          <span class="stat-label">License</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Everything you need to mark up a PDF</h2>
+        <p>Built for reviewers, students and teams who need fast, precise PDF editing without the bloat.</p>
+      </div>
+      <div class="features-grid">
+
+        <div class="feature-card">
+          <div class="feature-icon">📝</div>
+          <h3>Add Text Anywhere</h3>
+          <p>Drop text boxes on any page, pick fonts and sizes, and reposition content with pixel-level control.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🖍️</div>
+          <h3>Highlights &amp; Ink</h3>
+          <p>Highlight passages or draw freehand ink with pressure-smoothed strokes to comment directly on the page.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🔖</div>
+          <h3>Stamps &amp; Markers</h3>
+          <p>Apply approval, review and custom stamps in seconds to make document status instantly clear.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🧾</div>
+          <h3>Fill Interactive Forms</h3>
+          <p>Complete AcroForm fields, checkboxes and radio buttons, then flatten or save with your answers intact.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🗂️</div>
+          <h3>Merge &amp; Reorder Pages</h3>
+          <p>Combine multiple PDFs, delete duplicates and drag pages into the exact order you need before export.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🔒</div>
+          <h3>Local &amp; Private</h3>
+          <p>All rendering and editing happens on your machine — your documents never leave your Windows device.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="how-it-works">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>How it works</h2>
+        <p>From download to exported PDF in under a minute.</p>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Download &amp; install</h3>
+            <p>Grab the latest Windows build from gitscore.cc and run the installer. No account or license key required.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Open and annotate</h3>
+            <p>Drag a PDF into the app, then add text, highlights, stamps, ink or fill form fields with the toolbar.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Export your PDF</h3>
+            <p>Merge or reorder pages if needed, then save a flattened annotated PDF ready to share or print.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Frequently asked questions</h2>
+        <p>Quick answers about pdf-annotate and the Windows release.</p>
+      </div>
+
+      <div class="faq-list">
+        <details class="faq">
+          <summary>Is pdf-annotate really free?<span class="faq-icon">+</span></summary>
+          <div class="faq-answer">
+            Yes. pdf-annotate is free and open source. You can download the Windows build, use every annotation
+            and form-filling feature, and inspect or contribute to the source code on GitHub.
+          </div>
+        </details>
+
+        <details class="faq">
+          <summary>Do my PDFs get uploaded to a server?<span class="faq-icon">+</span></summary>
+          <div class="faq-answer">
+            No. All parsing, rendering and editing runs locally on your Windows machine. Nothing is uploaded,
+            so confidential contracts and internal documents stay private.
+          </div>
+        </details>
+
+        <details class="faq">
+          <summary>Which Windows versions are supported?<span class="faq-icon">+</span></summary>
+          <div class="faq-answer">
+            The current release targets Windows 10 and Windows 11 (64-bit). A portable build is also included
+            in the download package for users who prefer not to install anything.
+          </div>
+        </details>
+
+        <details class="faq">
+          <summary>Will annotations stay editable after export?<span class="faq-icon">+</span></summary>
+          <div class="faq-answer">
+            By default exports are flattened so annotations display identically everywhere. You can also save the
+            project file to keep text, ink and stamps editable for future revisions.
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA BANNER -->
+  <section>
+    <div class="wrap">
+      <div class="cta-banner">
+        <h2>Start annotating PDFs today</h2>
+        <p>Download pdf-annotate for Windows and turn any PDF into a reviewable, fillable document in seconds.</p>
+        <a class="btn btn-primary" href="https://gitscore.cc" target="_blank" rel="noopener">⬇ Download pdf-annotate</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap footer-inner">
+    <div class="footer-brand">
+      <div class="brand-mark" style="width:24px;height:24px;border-radius:7px;font-size:0.75rem;">✎</div>
+      pdf-annotate
+    </div>
+    <div>© 2025 pdf-annotate. Released under the MIT License.</div>
