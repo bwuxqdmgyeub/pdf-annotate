@@ -1,0 +1,1 @@
+"""Small helpers shared across host and extensions."""
