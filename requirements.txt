@@ -1,0 +1,8 @@
+# PDF Annotate - runtime dependencies
+PySide6>=6.7.0
+pymupdf>=1.24.0
+pikepdf>=8.15.0
+Pillow>=10.3.0
+pluggy>=1.5.0
+python-dotenv>=1.0.1
+watchdog>=4.0.0
